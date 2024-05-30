@@ -16,6 +16,19 @@ namespace Business_logic_Layer
             _jwtService = jwtService;
         }
 
+        public string Register(User user)
+        {
+            return _dalLogin.Register(user);
+        }
+        public User GetUserById(int userId)
+        {
+            return _dalLogin.GetUserById(userId);
+        }
+        public string UpdateUser(User updatedUser)
+        {
+            return _dalLogin.UpdateUser(updatedUser);
+        }
+
         public ResponseResult LoginUser(LoginRequest loginRequest)
         {
             try

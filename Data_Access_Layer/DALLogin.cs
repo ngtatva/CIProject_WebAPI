@@ -11,7 +11,162 @@ namespace Data_Access_Layer
         {
             _cIDbContext = cIDbContext;
         }
-        
+
+        public User GetUserById(int userId)
+        {
+            try
+            {
+                User user = new User();
+                // Retrieve the user by ID
+                user = _cIDbContext.User.FirstOrDefault(u => u.Id == userId && !u.IsDeleted);
+
+                if (user != null)
+                {
+                    return user;
+                }
+                else
+                {
+                    throw new Exception("User not found.");
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public string Register(User user)
+        {
+            string result = "";
+            try
+            {
+                // Check if the email address already exists
+                bool emailExists = _cIDbContext.User.Any(u => u.EmailAddress == user.EmailAddress && !u.IsDeleted);
+
+                if (!emailExists)
+                {
+                    string maxEmployeeIdStr = _cIDbContext.UserDetail.Max(ud => ud.EmployeeId);
+                    int userID = _cIDbContext.User.Max(u => u.Id) + 1;
+                    int userDetailID = _cIDbContext.UserDetail.Max(ud => ud.Id) + 1;
+                    int maxEmployeeId = 0;
+
+                    // Convert the maximum EmployeeId to an integer
+                    if (!string.IsNullOrEmpty(maxEmployeeIdStr))
+                    {
+                        if (int.TryParse(maxEmployeeIdStr, out int parsedEmployeeId))
+                        {
+                            maxEmployeeId = parsedEmployeeId;
+                        }
+                        else
+                        {
+                            // Handle conversion error
+                            throw new Exception("Error converting EmployeeId to integer.");
+                        }
+                    }
+
+                    // Increment the maximum EmployeeId by 1 for the new user
+                    int newEmployeeId = maxEmployeeId + 1;
+
+                    // Create a new user entity
+                    var newUser = new User
+                    {
+                        Id = userID,
+                        FirstName = user.FirstName,
+                        LastName = user.LastName,
+                        PhoneNumber = user.PhoneNumber,
+                        EmailAddress = user.EmailAddress,
+                        Password = user.Password,
+                        UserType = user.UserType,
+                        CreatedDate = DateTime.Now.ToUniversalTime(),
+                        IsDeleted = false
+                    };
+                    var newUserDetail = new UserDetail
+                    {
+                        Id= userDetailID,
+                        UserId = userID,
+                        FirstName = user.FirstName,
+                        LastName = user.LastName,
+                        PhoneNumber = user.PhoneNumber,
+                        EmailAddress = user.EmailAddress,
+                        UserType = user.UserType,
+                        Name = user.FirstName,
+                        Surname = user.LastName,
+                        EmployeeId = newEmployeeId.ToString(),
+                        Title = "SDE 1",
+                        Manager = "Manager",
+                        Department = "IT",
+                        MyProfile = "",
+                        Avilability = "",
+                        WhyIVolunteer = "",
+                        LinkdInUrl = "",
+                        MySkills = "",
+                        UserImage = "",
+                        Status = true
+                    };
+                    // Add the new user to the database
+                    _cIDbContext.User.Add(newUser);
+                    _cIDbContext.UserDetail.Add(newUserDetail);
+                    _cIDbContext.SaveChanges();
+
+                    result = "User register successfully.";
+                }
+                else
+                {
+                    throw new Exception("Email Address Already Exist.");
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            return result;
+        }
+
+        public string UpdateUser(User updatedUser)
+        {
+            string result = "";
+            try
+            {
+                // Check if the user with the provided email address exists and is not deleted
+                var existingUser = _cIDbContext.User.FirstOrDefault(u => u.EmailAddress == updatedUser.EmailAddress && !u.IsDeleted);
+                var existingUserDetail = _cIDbContext.UserDetail.FirstOrDefault(u => u.UserId == updatedUser.Id && !u.IsDeleted);
+
+                if (existingUser != null && existingUserDetail != null)
+                {
+                    // Update user details
+                    existingUser.FirstName = updatedUser.FirstName;
+                    existingUser.LastName = updatedUser.LastName;
+                    existingUser.PhoneNumber = updatedUser.PhoneNumber;
+                    existingUser.UserType = updatedUser.UserType;
+                    existingUser.ModifiedDate = DateTime.Now.ToUniversalTime();
+                    existingUser.UserType = "user";
+
+                    existingUserDetail.FirstName = updatedUser.FirstName;
+                    existingUserDetail.LastName = updatedUser.LastName;
+                    existingUserDetail.PhoneNumber = updatedUser.PhoneNumber;
+                    existingUserDetail.EmailAddress = updatedUser.EmailAddress;
+                    existingUserDetail.UserType = updatedUser.UserType;
+                    existingUserDetail.Name = updatedUser.FirstName;
+                    existingUserDetail.Surname = updatedUser.LastName;
+                    existingUserDetail.ModifiedDate = DateTime.Now.ToUniversalTime();
+
+                    // Save changes to the database
+                    _cIDbContext.SaveChanges();
+
+                    result = "User updated successfully.";
+                }
+                else
+                {
+                    throw new Exception("User not found or already deleted.");
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            return result;
+        }
+
         public User LoginUser(User user)
         {
             User userObj = new User();
