@@ -1,4 +1,4 @@
-﻿namespace Data_Access_Layer.Common
+﻿namespace Data_Access_Layer
 {
     public class DropDown
     {
