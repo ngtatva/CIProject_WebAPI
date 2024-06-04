@@ -38,5 +38,10 @@ namespace Business_logic_Layer
         {
             return _dalMission.DeleteMission(id);
         }
+
+        public List<Missions> ClientSideMissionList(int userid)
+        {
+            return _dalMission.ClientSideMissionList(userid);
+        }
     }
 }

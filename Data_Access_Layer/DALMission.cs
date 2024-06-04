@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Data;
 using System.Net;
 using System.Net.Mail;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Data_Access_Layer
 {
@@ -31,7 +32,7 @@ namespace Data_Access_Layer
 
         public List<Missions> MissionList()
         {
-            return _cIDbContext.Missions
+            return _cIDbContext.Missions.Where(m => m.IsDeleted == false)
                 .ToList();
         }
 
@@ -160,6 +161,55 @@ namespace Data_Access_Layer
             {
                 throw;
             }
+        }
+
+        public List<Missions> ClientSideMissionList(int userid)
+        {
+            List<Missions> clientSideMissionList = new List<Missions>();
+
+            try
+            {
+                clientSideMissionList = _cIDbContext.Missions
+                    .Where(m => !m.IsDeleted)
+                    .Select(m => new Missions
+                    {
+                        Id = m.Id,
+                        MissionTitle = m.MissionTitle,
+                        MissionDescription = m.MissionDescription,
+                        MissionOrganisationDetail=m.MissionOrganisationDetail,
+                        MissionOrganisationName=m.MissionOrganisationName,
+                        CountryId= m.CountryId,
+                        CountryName=m.CountryName,
+                        CityId= m.CityId,
+                        CityName= m.CityName,
+                        StartDate= m.StartDate,
+                        EndDate= m.EndDate,
+                        MissionType= m.MissionType,
+                        TotalSheets= m.TotalSheets,
+                        RegistrationDeadLine= m.RegistrationDeadLine,
+                        MissionThemeId= m.MissionThemeId,
+                        MissionSkillId= m.MissionSkillId,
+                        MissionImages= m.MissionImages,
+                        MissionDocuments= m.MissionDocuments,
+                        MissionAvilability= m.MissionAvilability,
+                        MissionVideoUrl= m.MissionVideoUrl,
+                        MissionThemeName= m.MissionThemeName,
+                        MissionSkillName= string.Join(",",m.MissionSkillName),
+                        MissionStatus= m.RegistrationDeadLine < DateTime.Now.AddDays(-1) ? "Closed" : "Available",
+                        MissionApplyStatus= "Apply",
+                        MissionDateStatus= m.EndDate <= DateTime.Now.AddDays(-1) ? "MissionEnd" : "MissionRunning",
+                        MissionDeadLineStatus= m.RegistrationDeadLine <= DateTime.Now.AddDays(-1) ? "Closed" : "Running",
+                        MissionFavouriteStatus= "0",
+                        Rating= 0,
+                    })
+                    .ToList();
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+
+            return clientSideMissionList;
         }
     }
 }
