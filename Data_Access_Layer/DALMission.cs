@@ -195,9 +195,10 @@ namespace Data_Access_Layer
                         MissionVideoUrl= m.MissionVideoUrl,
                         MissionThemeName= m.MissionThemeName,
                         MissionSkillName= string.Join(",",m.MissionSkillName),
-                        MissionStatus= m.RegistrationDeadLine < DateTime.Now.AddDays(-1) ? "Closed" : "Available",
-                        MissionApplyStatus= "Apply",
-                        MissionDateStatus= m.EndDate <= DateTime.Now.AddDays(-1) ? "MissionEnd" : "MissionRunning",
+                        MissionStatus = m.RegistrationDeadLine < DateTime.Now.AddDays(-1) ? "Closed" : "Available",
+                        MissionApplyStatus = _cIDbContext.MissionApplication.Any(ma => ma.MissionId == m.Id && ma.UserId == userid) ? "Applied" : "Apply",
+                        MissionApproveStatus = _cIDbContext.MissionApplication.Any(ma => ma.MissionId == m.Id && ma.UserId == userid && ma.Status == true) ? "Approved" : "Applied",
+                        MissionDateStatus = m.EndDate <= DateTime.Now.AddDays(-1) ? "MissionEnd" : "MissionRunning",
                         MissionDeadLineStatus= m.RegistrationDeadLine <= DateTime.Now.AddDays(-1) ? "Closed" : "Running",
                         MissionFavouriteStatus= "0",
                         Rating= 0,
@@ -210,6 +211,153 @@ namespace Data_Access_Layer
             }
 
             return clientSideMissionList;
+        }
+
+        public string ApplyMission(MissionApplication missionApplication)
+        {
+            string result = "";
+            try
+            {
+                // Begin transaction
+                using (var transaction = _cIDbContext.Database.BeginTransaction())
+                {
+                    try
+                    {
+                        // Get the mission and check if it's available
+                        var mission = _cIDbContext.Missions
+                            .FirstOrDefault(m => m.Id == missionApplication.MissionId && m.IsDeleted == false);
+
+                        if (mission != null)
+                        {
+                            // Check if sheets are available
+                            if (mission.TotalSheets >= missionApplication.Sheet)
+                            {
+                                // Create a new MissionApplication entity
+                                var newApplication = new MissionApplication
+                                {
+                                    MissionId = missionApplication.MissionId,
+                                    UserId = missionApplication.UserId,
+                                    AppliedDate = missionApplication.AppliedDate,
+                                    Status = missionApplication.Status,
+                                    Sheet = missionApplication.Sheet,
+
+                                    CreatedDate = DateTime.Now.ToUniversalTime(),
+                                    ModifiedDate = DateTime.Now.ToUniversalTime(),
+                                    IsDeleted = false
+                                };
+
+                                // Add the new application to the context
+                                _cIDbContext.MissionApplication.Add(newApplication);
+                                _cIDbContext.SaveChanges();
+
+                                // Update total sheets in the mission
+                                mission.TotalSheets -= missionApplication.Sheet;
+                                _cIDbContext.SaveChanges();
+
+                                result = "Mission Apply Successfully.";
+                            }
+                            else
+                            {
+                                result = "Mission Housefull";
+                            }
+                        }
+                        else
+                        {
+                            result = "Mission Not Found.";
+                        }
+
+                        // Commit transaction
+                        transaction.Commit();
+                    }
+                    catch (Exception ex)
+                    {
+                        // Rollback transaction if an exception occurs
+                        transaction.Rollback();
+                        throw ex;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            return result;
+        }
+
+        public List<MissionApplication> MissionApplicationList()
+        {
+            List<MissionApplication> missionApplicationList = new List<MissionApplication>();
+            try
+            {
+                missionApplicationList = _cIDbContext.MissionApplication
+                    .Where(ma => !ma.IsDeleted) // Assuming IsDeleted is a property on MissionApplication indicating deletion status
+                    .Join(_cIDbContext.Missions.Where(m => !m.IsDeleted),
+                          ma => ma.MissionId,
+                          m => m.Id,
+                          (ma, m) => new { ma, m })
+                    .Join(_cIDbContext.User.Where(u => !u.IsDeleted),
+                          mm => mm.ma.UserId,
+                          u => u.Id,
+                          (mm, u) => new MissionApplication
+                          {
+                              Id = mm.ma.Id,
+                              MissionId = mm.ma.MissionId,
+                              MissionTitle = mm.m.MissionTitle,
+                              UserId = u.Id,
+                              UserName = u.FirstName + " " + u.LastName,
+                              AppliedDate = mm.ma.AppliedDate,
+                              Status = mm.ma.Status
+                          })
+                    .ToList();
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            return missionApplicationList;
+        }
+
+        public string MissionApplicationDelete(int id)
+        {
+            try
+            {
+                var missionApplication = _cIDbContext.MissionApplication.FirstOrDefault(m => m.Id == id);
+                if (missionApplication != null)
+                {
+                    missionApplication.IsDeleted = true;
+                    _cIDbContext.SaveChanges();
+                    return "Success";
+                }
+                else
+                {
+                    return "Record not found";
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+        public string MissionApplicationApprove(int id)
+        {
+            try
+            {
+                var missionApplication = _cIDbContext.MissionApplication.FirstOrDefault(m => m.Id == id);
+                if (missionApplication != null)
+                {
+                    missionApplication.Status = true;
+                    _cIDbContext.SaveChanges();
+                    return "Mission is approved";
+                }
+                else
+                {
+                    return "Mission is not approved";
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
     }
 }

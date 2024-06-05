@@ -181,5 +181,62 @@ namespace Web_API.Controllers
         }
 
         #endregion
+
+        #region MissionApplication
+
+        [HttpGet]
+        [Route("MissionApplicationList")]
+        [Authorize]
+        public ResponseResult MissionApplicationList()
+        {
+            try
+            {
+                result.Data = _balMission.MissionApplicationList();
+                result.Result = ResponseStatus.Success;
+            }
+            catch (Exception ex)
+            {
+                result.Result = ResponseStatus.Error;
+                result.Message = ex.Message;
+            }
+            return result;
+        }
+
+        [HttpPost]
+        [Route("MissionApplicationDelete")]
+        [Authorize]
+        public ResponseResult MissionApplicationDelete(MissionApplication missionApplication)
+        {
+            try
+            {
+                result.Data = _balMission.MissionApplicationDelete(missionApplication.Id);
+                result.Result = ResponseStatus.Success;
+            }
+            catch (Exception ex)
+            {
+                result.Result = ResponseStatus.Error;
+                result.Message = ex.Message;
+            }
+            return result;
+        }
+        [HttpPost]
+        [Route("MissionApplicationApprove")]
+        [Authorize]
+        public ResponseResult MissionApplicationApprove(MissionApplication missionApplication)
+        {
+            try
+            {
+                result.Data = _balMission.MissionApplicationApprove(missionApplication.Id);
+                result.Result = ResponseStatus.Success;
+            }
+            catch (Exception ex)
+            {
+                result.Result = ResponseStatus.Error;
+                result.Message = ex.Message;
+            }
+            return result;
+        }
+
+        #endregion
     }
 }

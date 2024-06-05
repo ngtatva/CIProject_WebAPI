@@ -39,9 +39,28 @@ namespace Business_logic_Layer
             return _dalMission.DeleteMission(id);
         }
 
+        public string ApplyMission(MissionApplication missionApplication)
+        {
+            return _dalMission.ApplyMission(missionApplication);
+        }
+
         public List<Missions> ClientSideMissionList(int userid)
         {
             return _dalMission.ClientSideMissionList(userid);
+        }
+
+        public List<MissionApplication> MissionApplicationList()
+        {
+            return _dalMission.MissionApplicationList();
+        }
+
+        public string MissionApplicationDelete(int id)
+        {
+            return _dalMission.MissionApplicationDelete(id);
+        }
+        public string MissionApplicationApprove(int id)
+        {
+            return _dalMission.MissionApplicationApprove(id);
         }
     }
 }
