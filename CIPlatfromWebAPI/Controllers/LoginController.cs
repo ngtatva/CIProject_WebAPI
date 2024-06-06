@@ -85,5 +85,57 @@ namespace Web_API.Controllers
             }
             return result;
         }
+
+        [HttpGet]
+        [Route("LoginUserDetailById/{id}")]
+        public ResponseResult LoginUserDetailById(int id)
+        {
+            try
+            {
+                result.Data = _balLogin.LoginUserDetailById(id);
+                result.Result = ResponseStatus.Success;
+            }
+            catch (Exception ex)
+            {
+                result.Result = ResponseStatus.Error;
+                result.Message = ex.Message;
+            }
+            return result;
+        }
+
+        [HttpGet]
+        [Route("GetUserProfileDetailById/{userid}")]
+        public ResponseResult GetUserProfileDetailById(int userid)
+        {
+            try
+            {
+                result.Data = _balLogin.GetUserProfileDetailById(userid);
+                result.Result = ResponseStatus.Success;
+            }
+            catch (Exception ex)
+            {
+                result.Result = ResponseStatus.Error;
+                result.Message = ex.Message;
+            }
+            return result;
+        }
+
+        [HttpPost]
+        [Route("LoginUserProfileUpdate")]
+        [Authorize]
+        public ResponseResult LoginUserProfileUpdate(UserDetail userDetail)
+        {
+            try
+            {
+                result.Data = _balLogin.LoginUserProfileUpdate(userDetail);
+                result.Result = ResponseStatus.Success;
+            }
+            catch (Exception ex)
+            {
+                result.Result = ResponseStatus.Error;
+                result.Message = ex.Message;
+            }
+            return result;
+        }
     }
 }

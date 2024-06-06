@@ -48,5 +48,10 @@ namespace Business_logic_Layer
         {
             return await _dalCommon.MissionTitleListAsync();
         }
+
+        public List<DropDown> GetUserSkill(int userId)
+        {
+            return _dalCommon.GetUserSkill(userId);
+        }
     }
 }
